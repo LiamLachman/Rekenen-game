@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tafel Avontuur - Leer & Speel met Tafels</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #6EE7B7 0%, #3B82F6 50%, #9333EA 100%);
+            min-height: 100vh;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .font-heading {
+            font-family: 'Fredoka', cursive;
+        }
+
+        /* Custom glassmorphism cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Pulsing & bouncy animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(2deg); }
+        }
+
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.8; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .balloon-pop {
+            animation: pop 0.25s forwards ease-out;
+        }
+
+        /* Custom balloon styling */
+        .balloon {
+            transition: transform 0.1s ease;
+            box-shadow: inset -8px -8px 0px rgba(0, 0, 0, 0.15), 0 10px 15px rgba(0,0,0,0.2);
+        }
+
+        .balloon::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 12px solid inherit;
+            filter: brightness(0.9);
+        }
+
+        .balloon::before {
+            content: '';
+            position: absolute;
+            bottom: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Button click feedback */
+        .btn-bounce {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-bounce:active {
+            transform: scale(0.92);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.6);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col justify-between min-h-screen">
+
+    <!-- Top Navigation Header -->
+    <header class="w-full max-w-5xl mx-auto p-4 flex justify-between items-center z-20">
+        <div onclick="showView('menu')" class="cursor-pointer flex items-center space-x-3 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-lg border border-white/80 hover:scale-105 transition">
+            <div class="bg-amber-400 text-white p-2.5 rounded-xl shadow-inner">
+                <i class="fa-solid fa-graduation-cap text-2xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-slate-800 leading-tight">Tafel Avontuur</h1>
+                <p class="text-xs text-indigo-600 font-semibold">Oefen & Word een rekenheld!</p>
+            </div>
+        </div>
+
+        <!-- Right header tools (Sound & Stars counter) -->
+        <div class="flex items-center space-x-3">
+            <div class="bg-amber-100 text-amber-800 font-bold px-4 py-2 rounded-2xl shadow-sm border border-amber-300 flex items-center space-x-2">
+                <i class="fa-solid fa-star text-amber-500 text-lg animate-bounce"></i>
+                <span id="total-stars-count" class="text-lg">0</span>
+            </div>
+
+            <button id="sound-btn" onclick="toggleSound()" class="bg-white/90 p-3 rounded-2xl shadow-md border border-white hover:bg-slate-50 text-slate-700 btn-bounce" title="Geluid AAN/UIT">
+                <i id="sound-icon" class="fa-solid fa-volume-high text-xl text-emerald-600"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="w-full max-w-5xl mx-auto px-4 py-2 flex-grow flex items-center justify-center">
+
+        <!-- ================= MAIN MENU VIEW ================= -->
+        <div id="view-menu" class="w-full max-w-4xl glass-card rounded-3xl p-6 md:p-8 my-4 transition-all duration-300">
+            <div class="text-center mb-8">
+                <span class="inline-block bg-indigo-100 text-indigo-700 font-bold px-4 py-1.5 rounded-full text-sm mb-3">
+                    <i class="fa-solid fa-sparkles mr-1"></i> Kies je avontuur
+                </span>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-slate-800 font-heading">Klaar om te rekenen?</h2>
+                <p class="text-slate-600 mt-1 max-w-md mx-auto">Kies een spelmodus en word de meester van de tafels van 1 tot 12!</p>
+            </div>
+
+            <!-- Game Mode Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+                
+                <!-- Mode 1: Ballonnen Prikken -->
+                <div onclick="selectGameMode('balloons')" class="group relative bg-gradient-to-br from-pink-500 to-rose-600 rounded-3xl p-6 text-white shadow-xl cursor-pointer hover:-translate-y-1.5 transition-all duration-200 overflow-hidden btn-bounce">
+                    <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition"></div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-3xl shadow-inner">
+                            🎈
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold font-heading">Ballonnen Prikken</h3>
+                            <p class="text-pink-100 text-sm mt-1">Prik de ballon met het juiste antwoord voor ze wegvliegen!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mode 2: Tegen de Klok -->
+                <div onclick="selectGameMode('timeattack')" class="group relative bg-gradient-to-br from-amber-500 to-orange-600 rounded-3xl p-6 text-white shadow-xl cursor-pointer hover:-translate-y-1.5 transition-all duration-200 overflow-hidden btn-bounce">
+                    <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition"></div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-3xl shadow-inner">
+                            ⚡
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold font-heading">Tegen de Klok</h3>
+                            <p class="text-amber-100 text-sm mt-1">Los zo veel mogelijk sommen op in 60 seconden!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mode 3: Visueel Leren (Tafelkaart) -->
+                <div onclick="showView('visual')" class="group relative bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl p-6 text-white shadow-xl cursor-pointer hover:-translate-y-1.5 transition-all duration-200 overflow-hidden btn-bounce">
+                    <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition"></div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-3xl shadow-inner">
+                            🎨
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold font-heading">Visuele Tafelkaart</h3>
+                            <p class="text-emerald-100 text-sm mt-1">Ontdek waarom sommen zo werken met de interactieve stippenkaart.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mode 4: Trofeeën & Stats -->
+                <div onclick="showView('trophies')" class="group relative bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-xl cursor-pointer hover:-translate-y-1.5 transition-all duration-200 overflow-hidden btn-bounce">
+                    <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition"></div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-3xl shadow-inner">
+                            🏆
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold font-heading">Trofeeënkast</h3>
+                            <p class="text-indigo-100 text-sm mt-1">Bekijk je gescoorde medailles, badges en voortgang per tafel.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ================= TABLE SELECTOR MODAL / VIEW ================= -->
+        <div id="view-table-select" class="hidden w-full max-w-3xl glass-card rounded-3xl p-6 md:p-8 transition-all">
+            <div class="flex items-center justify-between mb-6">
+                <button onclick="showView('menu')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-2xl font-bold text-sm btn-bounce flex items-center space-x-2">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Terug</span>
+                </button>
+                <h2 id="table-select-title" class="text-2xl font-extrabold text-slate-800 font-heading">Kies je tafels</h2>
+                <div class="w-16"></div>
+            </div>
+
+            <p class="text-center text-slate-600 mb-6">Selecteer één of meerdere tafels om mee te spelen:</p>
+
+            <!-- Table Buttons Grid -->
+            <div id="table-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-3 md:gap-4 mb-8">
+                <!-- Javascript will insert 1 to 12 buttons here dynamically -->
+            </div>
+
+            <!-- Quick Action Shortcuts -->
+            <div class="flex flex-wrap gap-3 justify-center mb-8">
+                <button onclick="toggleAllTables(true)" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-200 btn-bounce">
+                    Selecteer Alles
+                </button>
+                <button onclick="toggleAllTables(false)" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-200 btn-bounce">
+                    Wissen
+                </button>
+            </div>
+
+            <button onclick="startGameWithSelection()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xl py-4 rounded-2xl shadow-lg shadow-emerald-500/30 btn-bounce flex items-center justify-center space-x-2">
+                <span>Start Het Spel!</span>
+                <i class="fa-solid fa-play"></i>
+            </button>
+        </div>
+
+        <!-- ================= GAME MODE 1: BALLONNEN PRIKKEN ================= -->
+        <div id="view-game-balloons" class="hidden w-full max-w-4xl glass-card rounded-3xl p-4 md:p-6 relative overflow-hidden flex flex-col justify-between h-[600px]">
+            
+            <!-- Game HUD Top Bar -->
+            <div class="flex items-center justify-between bg-white/80 backdrop-blur px-4 py-3 rounded-2xl shadow-sm z-10">
+                <button onclick="quitGame()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-3 py-1.5 rounded-xl font-bold text-xs btn-bounce">
+                    <i class="fa-solid fa-xmark mr-1"></i> Stop
+                </button>
+                
+                <div class="text-center">
+                    <span class="text-xs uppercase font-bold text-slate-400 block">Vraag</span>
+                    <span id="balloon-question" class="text-2xl md:text-3xl font-extrabold text-indigo-700 font-heading">7 × 8 = ?</span>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <span class="text-xs uppercase font-bold text-slate-400 block">Score</span>
+                        <span id="balloon-score" class="text-xl font-extrabold text-emerald-600 font-heading">0</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs uppercase font-bold text-slate-400 block">Combo</span>
+                        <span id="balloon-combo" class="text-xl font-extrabold text-amber-500 font-heading">x1</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Balloon Playground Arena -->
+            <div id="balloon-arena" class="relative flex-grow w-full overflow-hidden my-2 rounded-2xl bg-gradient-to-b from-sky-200/60 via-blue-100/40 to-indigo-100/60 border border-sky-200/50">
+                <!-- Floating balloons dynamically added by JS -->
+            </div>
+
+            <!-- Bottom Progress / Helper -->
+            <div class="bg-white/70 backdrop-blur px-4 py-2 rounded-xl text-center text-xs font-bold text-slate-500 z-10 flex justify-between items-center">
+                <span><i class="fa-solid fa-lightbulb text-amber-500 mr-1"></i> Tik op de ballon met het juiste getal!</span>
+                <span id="balloon-streak-badge" class="bg-amber-100 text-amber-700 px-2.5 py-0.5 rounded-full">Reeks: 0</span>
+            </div>
+        </div>
+
+        <!-- ================= GAME MODE 2: TEGEN DE KLOK ================= -->
+        <div id="view-game-timeattack" class="hidden w-full max-w-2xl glass-card rounded-3xl p-6 md:p-8 relative">
+            <!-- HUD Header -->
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="quitGame()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-3 py-1.5 rounded-xl font-bold text-xs btn-bounce">
+                    <i class="fa-solid fa-xmark mr-1"></i> Stop
+                </button>
+                <div class="flex items-center space-x-2 bg-amber-100 px-4 py-2 rounded-2xl text-amber-800 font-bold">
+                    <i class="fa-solid fa-stopwatch text-amber-600 animate-spin"></i>
+                    <span id="timeattack-timer" class="text-xl font-heading">60s</span>
+                </div>
+                <div class="bg-indigo-100 px-4 py-2 rounded-2xl text-indigo-800 font-bold">
+                    Score: <span id="timeattack-score" class="text-xl font-heading">0</span>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden mb-8 shadow-inner">
+                <div id="timer-bar" class="bg-amber-500 h-full w-full transition-all duration-1000 ease-linear"></div>
+            </div>
+
+            <!-- Som Card -->
+            <div class="text-center bg-white/80 border border-white p-8 rounded-3xl shadow-sm mb-8">
+                <span class="text-slate-400 font-bold text-sm uppercase tracking-wider block mb-2">Reken snel uit!</span>
+                <div id="timeattack-question" class="text-4xl md:text-5xl font-black text-slate-800 font-heading tracking-wide">
+                    6 × 9 = ?
+                </div>
+            </div>
+
+            <!-- Answer Options (4 Multiple Choice buttons) -->
+            <div id="timeattack-options" class="grid grid-cols-2 gap-4">
+                <!-- Javascript injects 4 option buttons -->
+            </div>
+        </div>
+
+        <!-- ================= MODE 3: VISUELE TAFELKAART ================= -->
+        <div id="view-visual" class="hidden w-full max-w-4xl glass-card rounded-3xl p-6 md:p-8">
+            <div class="flex items-center justify-between mb-6">
+                <button onclick="showView('menu')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-2xl font-bold text-sm btn-bounce flex items-center space-x-2">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Menu</span>
+                </button>
+                <h2 class="text-2xl font-extrabold text-slate-800 font-heading">Visueel Leren</h2>
+                <div class="w-16"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Left: Table Selection -->
+                <div class="bg-white/80 p-4 rounded-2xl border border-slate-100 shadow-sm">
+                    <h3 class="font-bold text-slate-700 mb-3 text-sm uppercase tracking-wider">Kies een tafel</h3>
+                    <div class="grid grid-cols-3 gap-2" id="visual-table-buttons">
+                        <!-- Buttons 1 to 12 dynamically generated -->
+                    </div>
+                </div>
+
+                <!-- Right: Interactive Matrix / Array Visualizer -->
+                <div class="md:col-span-2 bg-white/90 p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 id="visual-title" class="text-2xl font-bold text-indigo-700 font-heading">Tafel van 4</h3>
+                            <span id="visual-equation" class="text-xl font-extrabold text-slate-800 bg-indigo-50 px-3 py-1 rounded-xl">4 × 3 = 12</span>
+                        </div>
+
+                        <!-- Selector for multiplier (1-10) -->
+                        <div class="flex items-center space-x-2 overflow-x-auto pb-3 mb-4" id="visual-multiplier-bar">
+                            <!-- Buttons 1 to 10 -->
+                        </div>
+
+                        <!-- Visual Grid Dots Display -->
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 min-h-[220px] flex flex-col items-center justify-center">
+                            <div id="visual-dots-grid" class="flex flex-col gap-2 max-w-full overflow-auto">
+                                <!-- Dots generated by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-xs text-slate-500 text-center font-semibold bg-indigo-50/50 py-2 rounded-xl">
+                        💡 Tip: <span id="visual-explanation">4 × 3 betekent 4 rijen van 3 stippen = 12 stippen!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= MODE 4: TROFEEËNKAST ================= -->
+        <div id="view-trophies" class="hidden w-full max-w-4xl glass-card rounded-3xl p-6 md:p-8">
+            <div class="flex items-center justify-between mb-6">
+                <button onclick="showView('menu')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-2xl font-bold text-sm btn-bounce flex items-center space-x-2">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Menu</span>
+                </button>
+                <h2 class="text-2xl font-extrabold text-slate-800 font-heading">Jouw Trofeeën & Stats</h2>
+                <button onclick="resetProgress()" class="text-xs text-rose-500 font-bold hover:underline">Reset Voortgang</button>
+            </div>
+
+            <!-- Badges List -->
+            <div class="mb-8">
+                <h3 class="font-bold text-slate-700 mb-4 text-lg">Behaalde Badges</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" id="badges-container">
+                    <!-- Badges injected by JS -->
+                </div>
+            </div>
+
+            <!-- Detailed Table Accuracy Stats -->
+            <div>
+                <h3 class="font-bold text-slate-700 mb-4 text-lg">Nauwkeurigheid Per Tafel</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" id="table-stats-container">
+                    <!-- Cards per table 1-12 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= GAME OVER / RESULTATEN MODAL ================= -->
+        <div id="modal-results" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl border border-white/80 animate-bounce-in">
+                <div id="results-icon" class="text-6xl mb-3">🎉</div>
+                <h3 id="results-title" class="text-3xl font-extrabold text-slate-800 font-heading mb-1">Geweldig gedaan!</h3>
+                <p id="results-subtitle" class="text-slate-500 font-semibold mb-6">Je hebt super goed je best gedaan!</p>
+
+                <!-- Stats summary box -->
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 mb-6 space-y-3">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-slate-500 font-bold">Behaalde Score:</span>
+                        <span id="results-score" class="text-xl font-extrabold text-indigo-600 font-heading">150</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-slate-500 font-bold">Juiste Antwoorden:</span>
+                        <span id="results-correct" class="text-lg font-extrabold text-emerald-600 font-heading">15/15</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-slate-500 font-bold">Hoogste Combo:</span>
+                        <span id="results-combo" class="text-lg font-extrabold text-amber-500 font-heading">x5</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="text-slate-500 font-bold">Verdiende Sterren:</span>
+                        <span id="results-stars" class="text-lg font-extrabold text-amber-500 font-heading">+5 ⭐</span>
+                    </div>
+                </div>
+
+                <div class="flex space-x-3">
+                    <button onclick="closeResultsModal(); showView('menu');" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3.5 rounded-2xl btn-bounce">
+                        Hoofdmenu
+                    </button>
+                    <button onclick="closeResultsModal(); restartCurrentGame();" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-2xl btn-bounce shadow-lg shadow-indigo-600/30">
+                        Opnieuw!
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full text-center py-4 text-white/80 font-semibold text-xs z-10">
+        Tafel Avontuur &copy; Educatieve Reken Game voor Kinderen
+    </footer>
+
+    <script>
+        /* Web Audio API Sound Synthesizer for rich audio without external files */
+        class SoundEffects {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+            }
+
+            playPop() {
+                if (!this.enabled) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.08);
+
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+
+            playCorrect() {
+                if (!this.enabled) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const notes = [523.25, 659.25, 783.99]; // C5, E5, G5 major triad
+
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.value = freq;
+
+                    gain.gain.setValueAtTime(0, now + idx * 0.06);
+                    gain.gain.linearRampToValueAtTime(0.2, now + idx * 0.06 + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.2);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(now + idx * 0.06);
+                    osc.stop(now + idx * 0.06 + 0.2);
+                });
+            }
+
+            playWrong() {
+                if (!this.enabled) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.linearRampToValueAtTime(110, now + 0.2);
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+
+            playFanfare() {
+                if (!this.enabled) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const arpeggio = [440, 554.37, 659.25, 880]; // A4, C#5, E5, A5
+
+                arpeggio.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+
+                    const startTime = now + idx * 0.1;
+                    gain.gain.setValueAtTime(0, startTime);
+                    gain.gain.linearRampToValueAtTime(0.25, startTime + 0.03);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.4);
+                });
+            }
+        }
+
+        const sound = new SoundEffects();
+
+        // APP STATE
+        let appState = {
+            stars: 0,
+            selectedTables: [1, 2, 3, 4, 5, 10], // Default selection
+            currentMode: null, // 'balloons' or 'timeattack'
+            stats: {
+                // Table specific stats: { correct: 0, total: 0 }
+            },
+            badges: [
+                { id: 'first_game', title: 'Eerste Eerste!', desc: 'Speel je eerste spelletje', icon: '🐣', unlocked: false },
+                { id: 'streak_5', title: 'Op Stoom!', desc: 'Haal een combo van 5x', icon: '🔥', unlocked: false },
+                { id: 'stars_50', title: 'Sterrenverzamelaar', desc: 'Verzamel 50 sterren', icon: '⭐', unlocked: false },
+                { id: 'speed_demon', title: 'Snelheidsduivel', desc: 'Haal 100+ score bij Tegen de Klok', icon: '⚡', unlocked: false },
+                { id: 'table_master', title: 'Tafel Meester', desc: 'Beantwoord 50 vragen goed', icon: '👑', unlocked: false }
+            ]
+        };
+
+        // Active Game Session variables
+        let gameSession = {
+            score: 0,
+            correctCount: 0,
+            totalQuestions: 0,
+            combo: 1,
+            maxCombo: 1,
+            timer: null,
+            timeLeft: 60,
+            currentQuestion: null,
+            activeBalloons: []
+        };
+
+        // Load state from localStorage
+        function loadState() {
+            const saved = localStorage.getItem('tafel_avontuur_state');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    appState = { ...appState, ...parsed };
+                } catch(e) { console.error(e); }
+            }
+            // Ensure stats structure exists for tables 1-12
+            for (let i = 1; i <= 12; i++) {
+                if (!appState.stats[i]) {
+                    appState.stats[i] = { correct: 0, total: 0 };
+                }
+            }
+            updateStarsDisplay();
+        }
+
+        function saveState() {
+            localStorage.setItem('tafel_avontuur_state', JSON.stringify(appState));
+            updateStarsDisplay();
+        }
+
+        function updateStarsDisplay() {
+            document.getElementById('total-stars-count').innerText = appState.stars;
+        }
+
+        function toggleSound() {
+            sound.enabled = !sound.enabled;
+            const icon = document.getElementById('sound-icon');
+            if (sound.enabled) {
+                icon.className = 'fa-solid fa-volume-high text-xl text-emerald-600';
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-xl text-rose-500';
+            }
+        }
+
+        // Navigation system
+        function showView(viewId) {
+            // Hide all views
+            ['menu', 'table-select', 'game-balloons', 'game-timeattack', 'visual', 'trophies'].forEach(id => {
+                const el = document.getElementById('view-' + id);
+                if (el) el.classList.add('hidden');
+            });
+
+            // Show selected
+            const target = document.getElementById('view-' + viewId);
+            if (target) target.classList.remove('hidden');
+
+            if (viewId === 'visual') {
+                initVisualMode();
+            } else if (viewId === 'trophies') {
+                renderTrophiesView();
+            }
+        }
+
+        function selectGameMode(mode) {
+            appState.currentMode = mode;
+            renderTableSelectionGrid();
+            showView('table-select');
+        }
+
+        function renderTableSelectionGrid() {
+            const grid = document.getElementById('table-grid');
+            grid.innerHTML = '';
+
+            for (let i = 1; i <= 12; i++) {
+                const isSelected = appState.selectedTables.includes(i);
+                const btn = document.createElement('button');
+                btn.className = `p-4 rounded-2xl font-heading font-extrabold text-xl flex flex-col items-center justify-center border-2 transition btn-bounce ${
+                    isSelected 
+                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-500/30' 
+                        : 'bg-white border-slate-200 text-slate-700 hover:border-indigo-300'
+                }`;
+                btn.innerHTML = `
+                    <span>Tafel van ${i}</span>
+                    <span class="text-xs font-normal opacity-80 mt-1">${appState.stats[i]?.correct || 0} goed</span>
+                `;
+                btn.onclick = () => toggleTableSelection(i);
+                grid.appendChild(btn);
+            }
+        }
+
+        function toggleTableSelection(num) {
+            const index = appState.selectedTables.indexOf(num);
+            if (index > -1) {
+                if (appState.selectedTables.length > 1) {
+                    appState.selectedTables.splice(index, 1);
+                }
+            } else {
+                appState.selectedTables.push(num);
+            }
+            renderTableSelectionGrid();
+        }
+
+        function toggleAllTables(select) {
+            if (select) {
+                appState.selectedTables = [1,2,3,4,5,6,7,8,9,10,11,12];
+            } else {
+                appState.selectedTables = [1]; // keep at least 1 table
+            }
+            renderTableSelectionGrid();
+        }
+
+        function startGameWithSelection() {
+            saveState();
+            if (appState.currentMode === 'balloons') {
+                startBalloonsGame();
+            } else if (appState.currentMode === 'timeattack') {
+                startTimeAttackGame();
+            }
+        }
+
+        // Helper to generate a random problem based on selected tables
+        function generateMathQuestion() {
+            const table = appState.selectedTables[Math.floor(Math.random() * appState.selectedTables.length)];
+            const multiplier = Math.floor(Math.random() * 10) + 1; // 1 to 10
+            return {
+                table: table,
+                multiplier: multiplier,
+                answer: table * multiplier,
+                text: `${table} × ${multiplier}`
+            };
+        }
+
+        // ================= BALLOON GAME LOGIC =================
+        let balloonSpawnInterval = null;
+        let balloonAnimFrame = null;
+
+        function startBalloonsGame() {
+            showView('game-balloons');
+            gameSession = {
+                score: 0,
+                correctCount: 0,
+                totalQuestions: 0,
+                combo: 1,
+                maxCombo: 1,
+                activeBalloons: []
+            };
+
+            updateBalloonHUD();
+            nextBalloonQuestion();
+            
+            // Clear old balloon loop if running
+            if (balloonSpawnInterval) clearInterval(balloonSpawnInterval);
+            if (balloonAnimFrame) cancelAnimationFrame(balloonAnimFrame);
+
+            // Spawn balloons periodically
+            spawnBalloonsForCurrentQuestion();
+            
+            // Animation loop for balloon physics
+            let lastTime = performance.now();
+            function animateBalloons(time) {
+                const dt = (time - lastTime) / 1000;
+                lastTime = time;
+
+                const arena = document.getElementById('balloon-arena');
+                const arenaHeight = arena.clientHeight;
+
+                gameSession.activeBalloons.forEach((b, index) => {
+                    b.y -= b.speed * 60 * dt;
+                    b.el.style.bottom = `${b.y}px`;
+
+                    // Slight wobble
+                    b.x += Math.sin(time / 300 + b.id) * 0.5;
+                    b.el.style.left = `${b.x}%`;
+
+                    // If balloon reached top of arena
+                    if (b.y > arenaHeight + 80) {
+                        b.el.remove();
+                        gameSession.activeBalloons.splice(index, 1);
+                    }
+                });
+
+                // Replenish balloons if count drops low
+                if (gameSession.activeBalloons.length < 4 && document.getElementById('view-game-balloons').classList.contains('hidden') === false) {
+                    spawnSingleBalloon();
+                }
+
+                balloonAnimFrame = requestAnimationFrame(animateBalloons);
+            }
+            balloonAnimFrame = requestAnimationFrame(animateBalloons);
+        }
+
+        function updateBalloonHUD() {
+            document.getElementById('balloon-score').innerText = gameSession.score;
+            document.getElementById('balloon-combo').innerText = `x${gameSession.combo}`;
+            document.getElementById('balloon-streak-badge').innerText = `Reeks: ${gameSession.correctCount}`;
+        }
+
+        function nextBalloonQuestion() {
+            gameSession.currentQuestion = generateMathQuestion();
+            document.getElementById('balloon-question').innerText = `${gameSession.currentQuestion.text} = ?`;
+        }
+
+        const balloonColors = [
+            'bg-rose-500 border-rose-600',
+            'bg-sky-500 border-sky-600',
+            'bg-emerald-500 border-emerald-600',
+            'bg-amber-500 border-amber-600',
+            'bg-purple-500 border-purple-600',
+            'bg-indigo-500 border-indigo-600'
+        ];
+
+        function spawnBalloonsForCurrentQuestion() {
+            const arena = document.getElementById('balloon-arena');
+            arena.innerHTML = '';
+            gameSession.activeBalloons = [];
+
+            // Spawn 1 correct answer balloon and 3-4 distractors
+            const answers = [gameSession.currentQuestion.answer];
+            while (answers.length < 5) {
+                const wrong = (Math.floor(Math.random() * 12) + 1) * (Math.floor(Math.random() * 10) + 1);
+                if (!answers.includes(wrong)) answers.push(wrong);
+            }
+
+            // Shuffle answers
+            answers.sort(() => Math.random() - 0.5);
+
+            answers.forEach((val) => {
+                spawnSingleBalloon(val);
+            });
+        }
+
+        function spawnSingleBalloon(forcedValue = null) {
+            const arena = document.getElementById('balloon-arena');
+            const q = gameSession.currentQuestion;
+            let value = forcedValue;
+
+            if (value === null) {
+                // 30% chance to be the correct answer if not present
+                const hasCorrect = gameSession.activeBalloons.some(b => b.value === q.answer);
+                if (!hasCorrect && Math.random() < 0.4) {
+                    value = q.answer;
+                } else {
+                    value = (Math.floor(Math.random() * 12) + 1) * (Math.floor(Math.random() * 10) + 1);
+                }
+            }
+
+            const el = document.createElement('div');
+            const colorClass = balloonColors[Math.floor(Math.random() * balloonColors.length)];
+            const xPos = Math.random() * 75 + 10; // 10% to 85% width
+
+            el.className = `balloon absolute w-20 h-24 rounded-full ${colorClass} text-white font-heading font-black text-2xl flex items-center justify-center cursor-pointer select-none transition-transform hover:scale-110 z-10`;
+            el.innerText = value;
+            el.style.left = `${xPos}%`;
+            el.style.bottom = `-100px`;
+
+            const balloonObj = {
+                id: Math.random(),
+                el: el,
+                value: value,
+                x: xPos,
+                y: -100,
+                speed: Math.random() * 1.2 + 0.8 // rising speed
+            };
+
+            el.onclick = (e) => popBalloon(balloonObj, e);
+            arena.appendChild(el);
+            gameSession.activeBalloons.push(balloonObj);
+        }
+
+        function popBalloon(balloonObj, event) {
+            sound.playPop();
+            balloonObj.el.classList.add('balloon-pop');
+
+            const isCorrect = balloonObj.value === gameSession.currentQuestion.answer;
+            const qTable = gameSession.currentQuestion.table;
+
+            // Stats update
+            gameSession.totalQuestions++;
+            appState.stats[qTable].total++;
+
+            if (isCorrect) {
+                sound.playCorrect();
+                gameSession.score += 10 * gameSession.combo;
+                gameSession.correctCount++;
+                gameSession.combo++;
+                if (gameSession.combo > gameSession.maxCombo) gameSession.maxCombo = gameSession.combo;
+
+                appState.stats[qTable].correct++;
+                appState.stars += 1;
+
+                // Visual particle effect
+                createParticles(event.clientX, event.clientY);
+
+                // Load next question
+                setTimeout(() => {
+                    nextBalloonQuestion();
+                    spawnBalloonsForCurrentQuestion();
+                }, 200);
+
+            } else {
+                sound.playWrong();
+                gameSession.combo = 1; // Reset combo multiplier
+                // Shake screen effect
+                document.getElementById('view-game-balloons').classList.add('animate-bounce');
+                setTimeout(() => {
+                    document.getElementById('view-game-balloons').classList.remove('animate-bounce');
+                }, 400);
+            }
+
+            updateBalloonHUD();
+            saveState();
+            checkBadges();
+
+            // End game after 15 questions in balloon mode
+            if (gameSession.totalQuestions >= 15) {
+                setTimeout(() => {
+                    endGame();
+                }, 500);
+            }
+        }
+
+        // Particle pop effect generator
+        function createParticles(x, y) {
+            for (let i = 0; i < 8; i++) {
+                const p = document.createElement('div');
+                p.className = 'fixed w-3 h-3 rounded-full bg-amber-400 pointer-events-none z-50';
+                p.style.left = `${x}px`;
+                p.style.top = `${y}px`;
+                document.body.appendChild(p);
+
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 80 + 40;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+
+                p.animate([
+                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                    { transform: `translate(${vx}px, ${vy}px) scale(0)`, opacity: 0 }
+                ], {
+                    duration: 500,
+                    easing: 'ease-out'
+                }).onfinish = () => p.remove();
+            }
+        }
+
+        // ================= TIME ATTACK GAME LOGIC =================
+        function startTimeAttackGame() {
+            showView('game-timeattack');
+            gameSession = {
+                score: 0,
+                correctCount: 0,
+                totalQuestions: 0,
+                combo: 1,
+                maxCombo: 1,
+                timeLeft: 60
+            };
+
+            document.getElementById('timeattack-score').innerText = '0';
+            document.getElementById('timeattack-timer').innerText = '60s';
+            document.getElementById('timer-bar').style.width = '100%';
+
+            nextTimeAttackQuestion();
+
+            // Start 60 second timer
+            if (gameSession.timer) clearInterval(gameSession.timer);
+            gameSession.timer = setInterval(() => {
+                gameSession.timeLeft--;
+                document.getElementById('timeattack-timer').innerText = `${gameSession.timeLeft}s`;
+                document.getElementById('timer-bar').style.width = `${(gameSession.timeLeft / 60) * 100}%`;
+
+                if (gameSession.timeLeft <= 0) {
+                    clearInterval(gameSession.timer);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function nextTimeAttackQuestion() {
+            gameSession.currentQuestion = generateMathQuestion();
+            document.getElementById('timeattack-question').innerText = `${gameSession.currentQuestion.text} = ?`;
+
+            // Options generation
+            const optionsContainer = document.getElementById('timeattack-options');
+            optionsContainer.innerHTML = '';
+
+            const answers = [gameSession.currentQuestion.answer];
+            while (answers.length < 4) {
+                const wrong = (Math.floor(Math.random() * 12) + 1) * (Math.floor(Math.random() * 10) + 1);
+                if (!answers.includes(wrong)) answers.push(wrong);
+            }
+            answers.sort(() => Math.random() - 0.5);
+
+            answers.forEach(ans => {
+                const btn = document.createElement('button');
+                btn.className = 'bg-white hover:bg-indigo-50 border-2 border-slate-200 text-slate-800 font-heading font-extrabold text-3xl py-6 rounded-2xl shadow-sm hover:border-indigo-500 hover:text-indigo-600 transition btn-bounce';
+                btn.innerText = ans;
+                btn.onclick = () => handleTimeAttackAnswer(ans, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleTimeAttackAnswer(selectedAns, btnElement) {
+            const isCorrect = selectedAns === gameSession.currentQuestion.answer;
+            const qTable = gameSession.currentQuestion.table;
+
+            gameSession.totalQuestions++;
+            appState.stats[qTable].total++;
+
+            if (isCorrect) {
+                sound.playCorrect();
+                btnElement.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
+                gameSession.score += 10 * gameSession.combo;
+                gameSession.correctCount++;
+                gameSession.combo++;
+                if (gameSession.combo > gameSession.maxCombo) gameSession.maxCombo = gameSession.combo;
+
+                appState.stats[qTable].correct++;
+                appState.stars += 1;
+            } else {
+                sound.playWrong();
+                btnElement.classList.add('bg-rose-500', 'text-white', 'border-rose-600');
+                gameSession.combo = 1;
+            }
+
+            document.getElementById('timeattack-score').innerText = gameSession.score;
+            saveState();
+            checkBadges();
+
+            // Short delay before next question
+            setTimeout(() => {
+                nextTimeAttackQuestion();
+            }, 250);
+        }
+
+        function endGame() {
+            if (gameSession.timer) clearInterval(gameSession.timer);
+            if (balloonAnimFrame) cancelAnimationFrame(balloonAnimFrame);
+
+            sound.playFanfare();
+
+            // Populate Modal
+            document.getElementById('results-score').innerText = gameSession.score;
+            document.getElementById('results-correct').innerText = `${gameSession.correctCount} / ${gameSession.totalQuestions}`;
+            document.getElementById('results-combo').innerText = `x${gameSession.maxCombo}`;
+            
+            const earnedStars = gameSession.correctCount;
+            document.getElementById('results-stars').innerText = `+${earnedStars} ⭐`;
+
+            // Display modal
+            document.getElementById('modal-results').classList.remove('hidden');
+
+            checkBadges();
+        }
+
+        function closeResultsModal() {
+            document.getElementById('modal-results').classList.add('hidden');
+        }
+
+        function restartCurrentGame() {
+            if (appState.currentMode === 'balloons') {
+                startBalloonsGame();
+            } else {
+                startTimeAttackGame();
+            }
+        }
+
+        function quitGame() {
+            if (gameSession.timer) clearInterval(gameSession.timer);
+            if (balloonAnimFrame) cancelAnimationFrame(balloonAnimFrame);
+            showView('menu');
+        }
+
+        // ================= VISUAL TABLE PRACTICE GRID =================
+        let currentVisualTable = 4;
+        let currentVisualMultiplier = 3;
+
+        function initVisualMode() {
+            const tableBtns = document.getElementById('visual-table-buttons');
+            tableBtns.innerHTML = '';
+
+            for (let i = 1; i <= 12; i++) {
+                const btn = document.createElement('button');
+                btn.className = `p-2 rounded-xl font-bold text-sm btn-bounce border ${i === currentVisualTable ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200'}`;
+                btn.innerText = `Tafel ${i}`;
+                btn.onclick = () => {
+                    currentVisualTable = i;
+                    initVisualMode();
+                };
+                tableBtns.appendChild(btn);
+            }
+
+            // Multiplier selector 1 to 10
+            const multBar = document.getElementById('visual-multiplier-bar');
+            multBar.innerHTML = '';
+            for (let m = 1; m <= 10; m++) {
+                const btn = document.createElement('button');
+                btn.className = `px-3 py-1.5 rounded-lg font-extrabold text-sm btn-bounce border ${m === currentVisualMultiplier ? 'bg-amber-500 text-white border-amber-500' : 'bg-slate-100 text-slate-700 border-slate-200'}`;
+                btn.innerText = `× ${m}`;
+                btn.onclick = () => {
+                    currentVisualMultiplier = m;
+                    renderVisualDots();
+                };
+                multBar.appendChild(btn);
+            }
+
+            renderVisualDots();
+        }
+
+        function renderVisualDots() {
+            document.getElementById('visual-title').innerText = `Tafel van ${currentVisualTable}`;
+            const total = currentVisualTable * currentVisualMultiplier;
+            document.getElementById('visual-equation').innerText = `${currentVisualTable} × ${currentVisualMultiplier} = ${total}`;
+            document.getElementById('visual-explanation').innerText = `${currentVisualTable} rijen van ${currentVisualMultiplier} stippen = ${total} stippen in totaal!`;
+
+            const dotsGrid = document.getElementById('visual-dots-grid');
+            dotsGrid.innerHTML = '';
+
+            // Draw matrix grid
+            for (let r = 0; r < currentVisualTable; r++) {
+                const row = document.createElement('div');
+                row.className = 'flex gap-2 items-center';
+
+                for (let c = 0; c < currentVisualMultiplier; c++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'w-6 h-6 md:w-7 md:h-7 rounded-full bg-indigo-500 shadow-sm flex items-center justify-center text-[10px] text-white font-bold animate-pulse';
+                    row.appendChild(dot);
+                }
+                dotsGrid.appendChild(row);
+            }
+        }
+
+        // ================= TROPHIES & STATS =================
+        function renderTrophiesView() {
+            // Badges
+            const badgesContainer = document.getElementById('badges-container');
+            badgesContainer.innerHTML = '';
+
+            appState.badges.forEach(b => {
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-2xl border text-center flex flex-col items-center justify-center transition ${
+                    b.unlocked 
+                        ? 'bg-amber-50 border-amber-300 shadow-md' 
+                        : 'bg-slate-100 border-slate-200 opacity-50 grayscale'
+                }`;
+                card.innerHTML = `
+                    <div class="text-4xl mb-2">${b.icon}</div>
+                    <h4 class="font-bold text-slate-800 text-sm font-heading">${b.title}</h4>
+                    <p class="text-xs text-slate-500 mt-1">${b.desc}</p>
+                    <span class="mt-2 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${b.unlocked ? 'bg-amber-200 text-amber-800' : 'bg-slate-200 text-slate-600'}">
+                        ${b.unlocked ? 'Ontgrendeld' : 'Vergrendeld'}
+                    </span>
+                `;
+                badgesContainer.appendChild(card);
+            });
+
+            // Table Stats
+            const statsContainer = document.getElementById('table-stats-container');
+            statsContainer.innerHTML = '';
+
+            for (let t = 1; t <= 12; t++) {
+                const stat = appState.stats[t] || { correct: 0, total: 0 };
+                const percent = stat.total > 0 ? Math.round((stat.correct / stat.total) * 100) : 0;
+
+                const card = document.createElement('div');
+                card.className = 'bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm';
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-heading font-extrabold text-slate-800">Tafel ${t}</span>
+                        <span class="text-xs font-bold text-indigo-600">${percent}%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div class="bg-indigo-500 h-full rounded-full" style="width: ${percent}%"></div>
+                    </div>
+                    <span class="text-[11px] text-slate-400 mt-1 block">${stat.correct} / ${stat.total} goed</span>
+                `;
+                statsContainer.appendChild(card);
+            }
+        }
+
+        function checkBadges() {
+            // Check unlocking conditions
+            if (gameSession.totalQuestions > 0) unlockBadge('first_game');
+            if (gameSession.maxCombo >= 5) unlockBadge('streak_5');
+            if (appState.stars >= 50) unlockBadge('stars_50');
+            if (appState.currentMode === 'timeattack' && gameSession.score >= 100) unlockBadge('speed_demon');
+
+            // Total correct count across all tables
+            let totalCorrect = 0;
+            Object.values(appState.stats).forEach(s => totalCorrect += s.correct);
+            if (totalCorrect >= 50) unlockBadge('table_master');
+
+            saveState();
+        }
+
+        function unlockBadge(id) {
+            const b = appState.badges.find(x => x.id === id);
+            if (b && !b.unlocked) {
+                b.unlocked = true;
+            }
+        }
+
+        function resetProgress() {
+            if (confirm("Weet je zeker dat je alle behaalde sterren en stats wilt wissen?")) {
+                localStorage.removeItem('tafel_avontuur_state');
+                appState.stars = 0;
+                appState.stats = {};
+                appState.badges.forEach(b => b.unlocked = false);
+                loadState();
+                renderTrophiesView();
+            }
+        }
+
+        window.onload = function() {
+            loadState();
+            // Start default view
+            showView('menu');
+        };
+    </script>
+</body>
+</html>
